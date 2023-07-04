@@ -1,0 +1,27 @@
+#canvas {
+    border: 1px solid black;
+    margin: 20px;
+}
+#consoleArea {
+    border: 1px solid lightgray;
+    margin: 20px;
+    height: 32px;
+    width: 512px;
+    overflow: hidden;
+    padding: 5px;
+    white-space: pre-wrap;
+}
+#imageArea {
+    height: 200px;
+    width: 200px;
+}
+#fnameArea {
+    width: 32ch;
+}
+#captionArea {
+    width: 96ch;
+}
+#submitButton {
+    font-size: small;
+    width: auto; 
+}

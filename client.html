@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="style.css">
+    <title>Daily Chichi</title>
+</head>
+
+<body>
+    <form id="addToQueueForm">
+        <input id="inputImageArea" type="file" accept="image/*"> <br><br>
+        <canvas id="imageArea"></canvas> <br><br>
+
+        <label for="fnameArea">Your name:</label>
+        <input type="text" id="fnameArea" name="fname" maxlength="32"> <br><br>
+
+        <label for="captionArea">Your caption:</label>
+        <input type="text" id="captionArea" name="caption" maxlength="96"> <br><br>
+
+        <button type="button" id="submitButton">Add To Queue</button> <br><br>
+    </form>
+    <div id="consoleArea"> Welcome! </div>
+    <script src="dist/client-bundle.js"></script>
+</body>
+</html>
