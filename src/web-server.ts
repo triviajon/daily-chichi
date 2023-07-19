@@ -23,9 +23,8 @@ app.post('/submit', asyncHandler(async (request: Request, response: Response) =>
 
     console.log(request.body);
     response
-        .status(HttpStatus.OK)
-        .type('text')
-        .send(request.body); 
+        .status(HttpStatus.ACCEPTED)
+        .send(); 
 }));
 
 /**

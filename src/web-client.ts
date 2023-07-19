@@ -1,5 +1,6 @@
 
 import assert from 'assert';
+import HttpStatus from 'http-status-codes';
 import { PostPayload } from './PostPayload';
 
 const LOCALHOST_BASE_URL = 'http://localhost:8789';
@@ -80,6 +81,25 @@ export class Client {
         });
 
         console.log(response.body);
+
+        this.resetPage(response);
+    }
+
+    private resetPage(response: Response): void {
+        switch (response.status) {
+            case (HttpStatus.ACCEPTED): {
+                this.consoleArea.innerText = "Your submission has been accepted successfully.";
+                this.inputImageArea.value = "";
+                this.imageArea.getContext('2d')?.clearRect(0, 0, this.imageArea.width, this.imageArea.height);
+                this.fnameArea.value = "";
+                this.captionArea.value = "";             
+                return;
+            }
+            default: {
+                this.consoleArea.innerText = "Sorry, something went wrong.";
+                return;
+            }
+        }
     }
 
     private getPayload(): PostPayload {
@@ -122,7 +142,7 @@ export class Client {
 
 
 /**
- * Set up the Starb page.
+ * Set up the page.
  */
 async function main(): Promise<void> {
     const client = new Client("consoleArea", "inputImageArea", "imageArea", "fnameArea", "captionArea", "submitButton");
