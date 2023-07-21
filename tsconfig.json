@@ -109,6 +109,7 @@
 
   "include": [
     "./src/*.ts",
+    "./src/utils/*.ts",
     "./test/*.ts"
   ],
 

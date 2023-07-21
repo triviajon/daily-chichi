@@ -3,6 +3,11 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import HttpStatus from 'http-status-codes';
 import asyncHandler from 'express-async-handler';
+import { handleRequest, HandlingResult } from './utils/handleSubmission';
+import { PostPayload } from './PostPayload';
+import { Config } from './Config';
+import path from 'path';
+import assert from "assert";
 
 const app = express();
 
@@ -10,6 +15,10 @@ const DEFAULT_PORT = 8789;
 app.use(express.json({ limit: '30mb' }));
 app.use(express.urlencoded({ limit: '30mb', extended: true }));
 app.use(cors());
+
+const homeDir: string = (process.env['HOME'] || process.env['USERPROFILE']) ?? assert.fail("Cannot find $HOME dir!");
+const configFilePath: string = path.join(homeDir, '.config', 'daily-chichi', 'config.json');
+const config: Config = require(configFilePath);
 
 app.get('/', asyncHandler(async (request: Request, response: Response) => {
     response
@@ -20,11 +29,22 @@ app.get('/', asyncHandler(async (request: Request, response: Response) => {
 
 app.post('/submit', asyncHandler(async (request: Request, response: Response) => {
     // TODO: Implement submission handling logic.
+    const payload: PostPayload = request.body;
 
-    console.log(request.body);
-    response
-        .status(HttpStatus.ACCEPTED)
-        .send(); 
+    const handlingResult: HandlingResult = handleRequest(payload, config.storeImagesDir); 
+    
+    switch (handlingResult) {
+        case(HandlingResult.ACCEPTED): 
+            response
+                .status(HttpStatus.ACCEPTED)
+                .send();
+            return;
+        default:
+            response
+                .status(HttpStatus.BAD_REQUEST)
+                .send();
+            return;
+    }
 }));
 
 /**
