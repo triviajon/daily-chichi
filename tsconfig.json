@@ -113,6 +113,8 @@
     "./test/*.ts"
   ],
 
+  "exclude": ["node_modules"],
+
   "typedocOptions": {
 		"entryPoints": [
 		],

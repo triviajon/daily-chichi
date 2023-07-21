@@ -20,6 +20,8 @@ const homeDir: string = (process.env['HOME'] || process.env['USERPROFILE']) ?? a
 const configFilePath: string = path.join(homeDir, '.config', 'daily-chichi', 'config.json');
 const config: Config = require(configFilePath);
 
+console.log("Using this configuration:", config);
+
 app.get('/', asyncHandler(async (request: Request, response: Response) => {
     response
         .status(HttpStatus.OK)
@@ -28,10 +30,9 @@ app.get('/', asyncHandler(async (request: Request, response: Response) => {
 }));
 
 app.post('/submit', asyncHandler(async (request: Request, response: Response) => {
-    // TODO: Implement submission handling logic.
     const payload: PostPayload = request.body;
 
-    const handlingResult: HandlingResult = handleRequest(payload, config.storeImagesDir); 
+    const handlingResult: HandlingResult = handleRequest(payload, config); 
     
     switch (handlingResult) {
         case(HandlingResult.ACCEPTED): 

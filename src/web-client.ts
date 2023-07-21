@@ -96,7 +96,7 @@ export class Client {
                 return;
             }
             default: {
-                this.consoleArea.innerText = "Sorry, something went wrong.";
+                this.consoleArea.innerText = "Sorry, something went wrong. Please try again!";
                 return;
             }
         }

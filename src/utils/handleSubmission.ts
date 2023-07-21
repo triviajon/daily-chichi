@@ -1,6 +1,8 @@
 import fs from 'fs';
+import path from 'path';
 import { PostPayload } from '../PostPayload';
 import { HashingAlgorithm, hash } from './hash';
+import { Config } from '../Config';
 
 export enum HandlingResult {
     ACCEPTED,
@@ -9,15 +11,15 @@ export enum HandlingResult {
     INTERNAL_ERROR
 }
 
-export function handleRequest(payload: PostPayload, savePath: string): HandlingResult {
+export function handleRequest(payload: PostPayload, config: Config): HandlingResult {
     try {
-        return _handleRequest(payload, savePath);
+        return _handleRequest(payload, config);
     } catch (e) {
         return HandlingResult.INTERNAL_ERROR;
     }
 }
 
-function _handleRequest(payload: PostPayload, savePath: string): HandlingResult {
+function _handleRequest(payload: PostPayload, config: Config): HandlingResult {
     const name: string = payload.name;
     const caption: string = payload.caption;
     const imageData: string = payload.imageCanvas;
@@ -26,11 +28,11 @@ function _handleRequest(payload: PostPayload, savePath: string): HandlingResult 
         return HandlingResult.MISSING_ITEM;
     }
 
-    if (haveSeenBefore(imageData)) {
+    if (haveSeenBefore(imageData, config)) {
         return HandlingResult.REPOST;
     }
 
-    saveRequest(name, caption, imageData);
+    saveRequest(name, caption, imageData, config);
 
     return HandlingResult.ACCEPTED;
 }
@@ -53,9 +55,39 @@ function saveAsPNG(buffer: Buffer, filePath: string): Promise<void> {
     });
 }
 
-async function saveRequest(name: string, caption: string, imageData: string): Promise<void> {
+async function saveRequest(name: string, caption: string, imageData: string, config: Config): Promise<void> {
+    const imagesDirectory: string = config.storeImagesDir;
+    const hashesFilePath: string = config.storeHashesPath;
     const imageHash: string = await hash(imageData, HashingAlgorithm.AverageHash);
-    // For now, disregard the hash.
+
+    console.log(imagesDirectory, hashesFilePath, imageHash);
+
+    storeHash(imageHash, hashesFilePath);
+    storeImage(imageData, imageHash, imagesDirectory);
+    storeMeta(name, caption, imagesDirectory);
+}
+
+function storeHash(imageHash: string, hashesFilePath: string): void {
+    if (!fs.existsSync(hashesFilePath)) {
+        fs.writeFileSync(hashesFilePath, "");
+    }
+
+    fs.appendFileSync(hashesFilePath, imageHash + '\n');
+}
+
+function storeImage(imageData: string, imageHash: string, imagesDirectory: string): void {
+    const thisImageDir: string = path.join(imagesDirectory, imageHash)
+    fs.mkdirSync(thisImageDir);
+    saveAsPNG(base64ToBuffer(imageData), path.join(thisImageDir, "image.png"));
+}
+
+function storeMeta(name: string, caption: string, imagesDirectory: string): void {
+    const data: string = JSON.stringify({
+        "name": name,
+        "caption": caption
+    });
+
+    fs.writeFileSync(path.join(imagesDirectory, "info.json"), data);
 }
 
 
@@ -64,6 +96,6 @@ function isEmpty(input: string): boolean {
     return input === undefined || input === null || input.length === 0;
 }
 
-function haveSeenBefore(imageData: string) {
+function haveSeenBefore(imageHash: string, config: Config) {
     return false;
 }

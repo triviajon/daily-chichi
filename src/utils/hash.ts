@@ -1,30 +1,26 @@
 import assert from "assert";
+import { Canvas, CanvasRenderingContext2D, createCanvas, loadImage } from "canvas";
 
 export enum HashingAlgorithm {
     AverageHash,
 }
 
 export async function hash(imageData: string, hashingAlgorithm: HashingAlgorithm): Promise<string> {
-    const image: HTMLImageElement = new Image();
-    image.src = imageData;
-
-    const calculateHashPromise: Promise<string> = new Promise<string>((resolve, reject) => {
-        switch (hashingAlgorithm) {
-            default:
-                image.onload = () => calculateAverageHash(image);
-        }
-    });
-
-    return await calculateHashPromise;
+    switch (hashingAlgorithm) {
+        default:
+            return calculateAverageHash(imageData);
+    }
 }
       
-function calculateAverageHash(image: HTMLImageElement): string {
-    const canvas = document.createElement('canvas');
-    canvas.width = 8;
-    canvas.height = 8;
-    const context: CanvasRenderingContext2D = canvas.getContext('2d') ?? assert.fail("Failed to create canvas");
-    
-    context.drawImage(image, 0, 0, canvas.width, canvas.height);
+async function calculateAverageHash(imageData: string): Promise<string> {
+    const canvas: Canvas = createCanvas(8, 8);
+    const context: CanvasRenderingContext2D = canvas.getContext('2d');
+
+    const base64Data: string = imageData.split(',')[1] ?? assert.fail("This is an invalid data URL!");
+    const buffer = Buffer.from(base64Data, 'base64');
+    const image = await loadImage(buffer);
+
+    context.drawImage(image, 0, 0, 8, 8);
 
     const averagedValues: Array<number> = [];
     const pixelData = context.getImageData(0, 0, canvas.width, canvas.height).data;
