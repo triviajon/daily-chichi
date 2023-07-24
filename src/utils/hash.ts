@@ -7,17 +7,18 @@ export enum HashingAlgorithm {
 
 export async function hash(imageData: string, hashingAlgorithm: HashingAlgorithm): Promise<string> {
     switch (hashingAlgorithm) {
-        default:
-            return calculateAverageHash(imageData);
+    default:
+        return calculateAverageHash(imageData);
     }
 }
       
 async function calculateAverageHash(imageData: string): Promise<string> {
     const canvas: Canvas = createCanvas(8, 8);
-    const context: CanvasRenderingContext2D = canvas.getContext('2d');
+    const context: CanvasRenderingContext2D = canvas.getContext("2d");
 
-    const base64Data: string = imageData.split(',')[1] ?? assert.fail("This is an invalid data URL!");
-    const buffer = Buffer.from(base64Data, 'base64');
+    const base64Data: string = imageData.split(",")[1] ?? 
+        assert.fail("This is an invalid data URL!");
+    const buffer = Buffer.from(base64Data, "base64");
     const image = await loadImage(buffer);
 
     context.drawImage(image, 0, 0, 8, 8);
@@ -42,5 +43,5 @@ async function calculateAverageHash(imageData: string): Promise<string> {
         isBrighter.push(r + g + b > averageValue);
     }
 
-    return isBrighter.map(b => b ? '1' : '0').join('');
+    return isBrighter.map(b => b ? "1" : "0").join("");
 }

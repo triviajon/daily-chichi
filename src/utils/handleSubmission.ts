@@ -1,8 +1,10 @@
-import fs from 'fs';
-import path from 'path';
-import { PostPayload } from '../PostPayload';
-import { HashingAlgorithm, hash } from './hash';
-import { Config } from '../Config';
+import path from "path";
+import { PostPayload } from "../PostPayload";
+import { HashingAlgorithm, hash } from "./hash";
+import { Config } from "../Config";
+import { WriteOptions, writeToFile } from "./files";
+import { PostMetadata } from "./PostMetadata";
+import { v4 as uuidv4 } from "uuid";
 
 export enum HandlingResult {
     ACCEPTED,
@@ -38,56 +40,75 @@ function _handleRequest(payload: PostPayload, config: Config): HandlingResult {
 }
 
 function base64ToBuffer(base64: string): Buffer {
-    return Buffer.from(base64.replace(/^data:image\/png;base64,/, ''), 'base64');
+    return Buffer.from(base64.replace(/^data:image\/png;base64,/, ""), "base64");
 }
 
-function saveAsPNG(buffer: Buffer, filePath: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      fs.writeFile(filePath, buffer, (err) => {
-        if (err) {
-            console.error('Error saving PNG file:', err);
-            reject(err);
-        } else {
-            console.log('File saved successfully!');
-            resolve();
-            }
-        });
-    });
-}
-
-async function saveRequest(name: string, caption: string, imageData: string, config: Config): Promise<void> {
+async function saveRequest(
+    name: string, 
+    caption: string, 
+    imageData: string, 
+    config: Config
+): Promise<void> {
     const imagesDirectory: string = config.storeImagesDir;
     const hashesFilePath: string = config.storeHashesPath;
     const imageHash: string = await hash(imageData, HashingAlgorithm.AverageHash);
 
+    const uuid: string = uuidv4();
+
     console.log(imagesDirectory, hashesFilePath, imageHash);
 
     storeHash(imageHash, hashesFilePath);
-    storeImage(imageData, imageHash, imagesDirectory);
-    storeMeta(name, caption, imagesDirectory);
+    storeImage(imageData, uuid, imagesDirectory);
+    storeMeta(name, caption, imageHash, uuid, imagesDirectory);
 }
 
 function storeHash(imageHash: string, hashesFilePath: string): void {
-    if (!fs.existsSync(hashesFilePath)) {
-        fs.writeFileSync(hashesFilePath, "");
-    }
+    const writeOptions: WriteOptions = {
+        recursive: true,
+        overwrite: false,
+        append: true,
+        verbose: true,
+    };
 
-    fs.appendFileSync(hashesFilePath, imageHash + '\n');
+    writeToFile(hashesFilePath, imageHash, writeOptions);
 }
 
-function storeImage(imageData: string, imageHash: string, imagesDirectory: string): void {
-    const thisImageDir: string = path.join(imagesDirectory, imageHash)
-    fs.mkdirSync(thisImageDir);
-    saveAsPNG(base64ToBuffer(imageData), path.join(thisImageDir, "image.png"));
+function storeImage(imageData: string, uuid: string, imagesDirectory: string): void {
+    const writeOptions: WriteOptions = {
+        recursive: true,
+        overwrite: false,
+        append: false,
+        verbose: true,
+    };
+    
+    const imageBuffer: Buffer = base64ToBuffer(imageData);
+    const filename: string = path.join(imagesDirectory, uuid, "image.png");
+    writeToFile(filename, imageBuffer, writeOptions);
 }
 
-function storeMeta(name: string, caption: string, imagesDirectory: string): void {
-    const data: string = JSON.stringify({
-        "name": name,
-        "caption": caption
-    });
+function storeMeta(
+    dateCaptured: string, 
+    caption: string, 
+    imageHash: string, 
+    uuid: string,
+    imagesDirectory: string
+): void {
+    const writeOptions: WriteOptions = {
+        recursive: true,
+        overwrite: false,
+        append: false,
+        verbose: true,
+    };
 
-    fs.writeFileSync(path.join(imagesDirectory, "info.json"), data);
+    const data: PostMetadata = {
+        dateCaptured: dateCaptured,
+        caption: caption,
+        imageHash: imageHash,
+        uuid: uuid
+    };
+    const dataString: string = JSON.stringify(data);
+    const filename: string = path.join(imagesDirectory, uuid, "info.json");
+    writeToFile(filename, dataString, writeOptions);
 }
 
 
@@ -96,6 +117,8 @@ function isEmpty(input: string): boolean {
     return input === undefined || input === null || input.length === 0;
 }
 
+/* eslint-disable */
 function haveSeenBefore(imageHash: string, config: Config) {
+    console.error("haveSeenBefore has not been implemented yet! returning false");
     return false;
 }

@@ -1,9 +1,9 @@
 
-import assert from 'assert';
-import HttpStatus from 'http-status-codes';
-import { PostPayload } from './PostPayload';
+import assert from "assert";
+import HttpStatus from "http-status-codes";
+import { PostPayload } from "./PostPayload";
 
-const LOCALHOST_BASE_URL = 'http://localhost:8789';
+const LOCALHOST_BASE_URL = "http://localhost:8789";
 const IMAGE_AREA_SIZE = 200;
 
 export class Client {
@@ -16,7 +16,7 @@ export class Client {
     // area for displaying user images
     private readonly imageArea: HTMLCanvasElement;
     // area for inputing fname
-    private readonly fnameArea: HTMLInputElement;
+    private readonly dateArea: HTMLInputElement;
     // area for inputing caption
     private readonly captionArea: HTMLInputElement;
     // submission button
@@ -27,24 +27,33 @@ export class Client {
         consoleAreaName: string,
         imageInputAreaName: string,
         imageAreaName: string,
-        fnameAreaName: string,
+        dateAreaName: string,
         captionAreaName: string,
         submitButtonName: string,
         private readonly baseUrl: string = LOCALHOST_BASE_URL
     ) {
 
-        this.consoleArea = document.getElementById(consoleAreaName) ?? assert.fail('missing console area');
-        this.inputImageArea = document.getElementById(imageInputAreaName) as HTMLInputElement ?? assert.fail('missing image input area')
-        this.imageArea = document.getElementById(imageAreaName) as HTMLCanvasElement?? assert.fail('missing image area');
-        this.fnameArea = document.getElementById(fnameAreaName) as HTMLInputElement ?? assert.fail('missing fname area');
-        this.captionArea = document.getElementById(captionAreaName) as HTMLInputElement ?? assert.fail('missing caption area');
-        this.submitButton = document.getElementById(submitButtonName) as HTMLInputElement?? assert.fail('missing submit button')
+        this.consoleArea = document.getElementById(consoleAreaName) ?? 
+            assert.fail("missing console area");
+        this.inputImageArea = document.getElementById(imageInputAreaName) as HTMLInputElement ?? 
+            assert.fail("missing image input area");
+        this.imageArea = document.getElementById(imageAreaName) as HTMLCanvasElement ?? 
+            assert.fail("missing image area");
+        this.dateArea = document.getElementById(dateAreaName) as HTMLInputElement ?? 
+            assert.fail("missing date area");
+        this.captionArea = document.getElementById(captionAreaName) as HTMLInputElement ?? 
+            assert.fail("missing caption area");
+        this.submitButton = document.getElementById(submitButtonName) as HTMLInputElement ?? 
+            assert.fail("missing submit button");
         
         this.checkRep();
-
-        this.inputImageArea.onchange = this.displayPreviewImage.bind(this);
-        this.submitButton.addEventListener('click', this.submitForm.bind(this));
     }
+
+    public start(): void {
+        this.inputImageArea.onchange = this.displayPreviewImage.bind(this);
+        this.submitButton.addEventListener("click", this.submitForm.bind(this));
+    }
+
 
     private checkRep(): void {
         return;
@@ -61,9 +70,10 @@ export class Client {
                 canvas.width = IMAGE_AREA_SIZE;
                 canvas.height = IMAGE_AREA_SIZE;
             }
-            const context: CanvasRenderingContext2D = canvas.getContext('2d') ?? assert.fail("Failed to get context.");
+            const context: CanvasRenderingContext2D = canvas.getContext("2d") ?? 
+                assert.fail("Failed to get context.");
             context.drawImage(this.resizeImageSquare(previewImage, IMAGE_AREA_SIZE), 0, 0);
-        }
+        };
 
         previewImage.src = URL.createObjectURL(imageFile);
         this.consoleArea.innerText = `Successfully recognized imagefile: ${imageFile.name}`;
@@ -73,9 +83,9 @@ export class Client {
         const payload: PostPayload = this.getPayload();
 
         const response = await fetch(`${this.baseUrl}/submit`, {
-            method: 'POST',
+            method: "POST",
             headers: { 
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
             },
             body: JSON.stringify(payload)
         });
@@ -87,27 +97,29 @@ export class Client {
 
     private resetPage(response: Response): void {
         switch (response.status) {
-            case (HttpStatus.ACCEPTED): {
-                this.consoleArea.innerText = "Your submission has been accepted successfully.";
-                this.inputImageArea.value = "";
-                this.imageArea.getContext('2d')?.clearRect(0, 0, this.imageArea.width, this.imageArea.height);
-                this.fnameArea.value = "";
-                this.captionArea.value = "";             
-                return;
-            }
-            default: {
-                this.consoleArea.innerText = "Sorry, something went wrong. Please try again!";
-                return;
-            }
+        case (HttpStatus.ACCEPTED): {
+            this.consoleArea.innerText = "Your submission has been accepted successfully.";
+            this.inputImageArea.value = "";
+            this.imageArea
+                .getContext("2d")!
+                .clearRect(0, 0, this.imageArea.width, this.imageArea.height);
+            this.dateArea.value = "";
+            this.captionArea.value = "";             
+            return;
+        }
+        default: {
+            this.consoleArea.innerText = "Sorry, something went wrong. Please try again!";
+            return;
+        }
         }
     }
 
     private getPayload(): PostPayload {
         return {
             imageCanvas: this.imageArea.toDataURL(),
-            name: this.fnameArea.value,
+            name: this.dateArea.value,
             caption: this.captionArea.value
-        }
+        };
     }
 
     /**
@@ -121,11 +133,12 @@ export class Client {
      * @returns a canvas containing the 
      */
     private resizeImageSquare(image: HTMLImageElement, newSideLength: number): HTMLCanvasElement {
-        const canvas: HTMLCanvasElement = document.createElement('canvas');
+        const canvas: HTMLCanvasElement = document.createElement("canvas");
         canvas.width = newSideLength;
         canvas.height = newSideLength;
       
-        const ctx: CanvasRenderingContext2D = canvas.getContext('2d') ?? assert.fail("Failed to get context.");
+        const ctx: CanvasRenderingContext2D = canvas.getContext("2d") ?? 
+            assert.fail("Failed to get context.");
       
         const sourceWidth = image.width;
         const sourceHeight = image.height;
@@ -135,9 +148,14 @@ export class Client {
         const offsetX = (sourceWidth - shorterDimension) / 2;
         const offsetY = (sourceHeight - shorterDimension) / 2;
       
-        ctx.drawImage(image, offsetX, offsetY, shorterDimension, shorterDimension, 0, 0, newSideLength, newSideLength);
+        ctx.drawImage(
+            image, offsetX, offsetY, 
+            shorterDimension, shorterDimension, 0, 0, 
+            newSideLength, newSideLength
+        );
+
         return canvas;
-      }
+    }
 }
 
 
@@ -145,7 +163,11 @@ export class Client {
  * Set up the page.
  */
 async function main(): Promise<void> {
-    const client = new Client("consoleArea", "inputImageArea", "imageArea", "fnameArea", "captionArea", "submitButton");
+    const client = new Client(
+        "consoleArea", "inputImageArea", "imageArea", 
+        "dateArea", "captionArea", "submitButton");
+    client.start();
+
 }
 
 void main();
